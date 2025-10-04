@@ -1,0 +1,1 @@
+# Firebase/Somee client placeholder

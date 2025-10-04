@@ -1,0 +1,8 @@
+{
+  "topics": [
+    "raw_news",
+    "classified_news",
+    "enriched_news",
+    "notifications"
+  ]
+}

@@ -1,0 +1,170 @@
+
+
+name: newssystem
+
+networks:
+  app-net:
+
+volumes:
+  redpanda-data:
+
+services:
+  # ---------- Kafka (Redpanda) ----------
+  redpanda:
+    image: redpandadata/redpanda:v24.1.8
+    command:
+      - redpanda start
+      - --overprovisioned
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+    ports:
+      - "9092:9092"   # Kafka
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster info --brokers=redpanda:9092 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [app-net]
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+    environment:
+      RPK_DISABLE_TLS: "true"
+
+  # יצירת טופיקים אוטומטית
+  kafka-init:
+      image: redpandadata/redpanda:v24.1.8
+      depends_on:
+          redpanda:
+            condition: service_healthy
+      entrypoint: ["/bin/sh","-lc"]
+      command: rpk cluster info --brokers=redpanda:9092 && rpk topic create raw_news classified_news enriched_news notifications --brokers=redpanda:9092
+      environment:
+        RPK_DISABLE_TLS: "true"
+      networks: [app-net]
+      restart: on-failure
+
+
+  # ---------- Gateway (FastAPI) ----------
+  gateway:
+      build:
+        context: ./services/gateway
+        dockerfile: Dockerfile
+      environment:
+        KAFKA_BOOTSTRAP: redpanda:9092
+        KAFKA_TOPICS: raw_news,classified_news,enriched_news,notifications
+        GATEWAY_HOST: 0.0.0.0
+        GATEWAY_PORT: 8000
+      ports: ["8000:8000"]
+      depends_on:
+        redpanda:
+          condition: service_started
+        kafka-init:
+          condition: service_completed_successfully
+      healthcheck:
+        test:
+          [
+            "CMD-SHELL",
+            "python - <<'PY'\nimport sys,urllib.request\ntry:\n  r=urllib.request.urlopen('http://localhost:8000/health',timeout=2)\n  sys.exit(0 if r.status==200 else 1)\nexcept Exception:\n  sys.exit(1)\nPY"
+          ]
+        interval: 10s
+        timeout: 3s
+        retries: 10
+      networks: [app-net]
+
+
+  # ---------- UI (Next.js) ----------
+  ui:
+    build:
+      context: ./ui/web-mvc
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+      NEXT_PUBLIC_NOTIFICATIONS_URL: http://localhost:8000/sse/notifications
+      NEXT_PUBLIC_MEDIA_BASE: https://res.cloudinary.com/<cloud_name>
+    ports:
+      - "3000:3000"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks: [app-net]
+
+
+  # ---------- News Fetcher (Producer) ----------
+  news-fetcher:
+    build:
+      context: ./services/news-fetcher
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      TOPIC_OUT: raw_news
+      NEWSAPI_KEY: ${NEWSAPI_KEY:-demo}
+      LOG_LEVEL: info
+    depends_on:
+      redpanda:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+    networks: [app-net]
+
+  # ---------- Classifier (Zero-Shot) ----------
+  classifier:
+    build:
+      context: ./services/classifier
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      TOPIC_IN: raw_news
+      TOPIC_OUT: classified_news
+      HF_HOME: /models
+      TRANSFORMERS_CACHE: /models
+      LOG_LEVEL: info
+    volumes:
+      - /tmp/hf-cache:/models   # Cache למודלים (להאיץ הפעלות)
+    depends_on:
+      redpanda:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+    networks: [app-net]
+
+  # ---------- NER Service ----------
+  ner-service:
+    build:
+      context: ./services/ner-service
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      TOPIC_IN: classified_news
+      TOPIC_OUT: enriched_news
+      LOG_LEVEL: info
+    volumes:
+      - /tmp/hf-cache:/models
+    depends_on:
+      redpanda:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+    networks: [app-net]
+
+  # ---------- Notifier ----------
+  notifier:
+    build:
+      context: ./services/notifier
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      TOPIC_IN: enriched_news
+      TOPIC_OUT: notifications
+      LOG_LEVEL: info
+    depends_on:
+      redpanda:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+    networks: [app-net]
