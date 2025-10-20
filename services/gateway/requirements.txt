@@ -9,6 +9,7 @@ uvicorn[standard]==0.30.6  # שרת הרצה ל-FastAPI עם תמיכה ב-auto 
 # Data models & validation
 # ------------------------------
 pydantic>=2.8,<3           # הגדרת מודלים וסכמות נתונים
+confluent-kafka==2.5.0
 
 # ------------------------------
 # External integrations
