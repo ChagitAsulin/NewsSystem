@@ -2,50 +2,37 @@
 
 // src/views/EntityTags.tsx
 import React from "react";
+import { Entity } from "../models/domain/NewsItem";
 
-interface EntityTag {
-  /** The name of the entity (e.g., person, location, organization) */
-  name: string;
-  /** The type/category of the entity (e.g., 'Person', 'Location', 'Organization') */
-  type: string;
+export interface EntityTagsProps {
+  entities: Entity[];
 }
 
-interface EntityTagsProps {
-  /** Array of entities to display as tags */
-  entities: EntityTag[];
-}
-
-/**
- * EntityTags component
- *
- * Displays a list of entities as small, styled tags.
- * Typically used inside a NewsCard or NewsDetails component
- * to show related persons, locations, or organizations.
- *
- * @param entities - Array of entity objects to render
- */
 const EntityTags: React.FC<EntityTagsProps> = ({ entities }) => {
-  if (!entities || entities.length === 0) {
-    return null; // No entities to display
-  }
+  const getTypeClass = (type: Entity["type"]) => {
+    switch (type) {
+      case "person":
+        return "bg-blue-100 text-blue-800";
+      case "location":
+        return "bg-green-100 text-green-800";
+      case "org":
+        return "bg-purple-100 text-purple-800";
+      case "misc":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {entities.map((entity, index) => (
+    <div className="flex flex-wrap gap-2">
+      {entities.map((entity, idx) => (
         <span
-          key={index}
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            entity.type === "Person"
-              ? "bg-blue-100 text-blue-800"
-              : entity.type === "Location"
-              ? "bg-green-100 text-green-800"
-              : entity.type === "Organization"
-              ? "bg-purple-100 text-purple-800"
-              : "bg-gray-100 text-gray-800"
-          }`}
-          title={entity.type}
+          key={idx}
+          className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeClass(entity.type)}`}
+          title={`Type: ${entity.type}`}
         >
-          {entity.name}
+          {entity.value}
         </span>
       ))}
     </div>
