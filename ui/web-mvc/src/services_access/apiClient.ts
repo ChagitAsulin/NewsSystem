@@ -15,49 +15,64 @@ export async function apiGet<T>(path: string, params?: Record<string, any>): Pro
 // src/services_access/apiClient.ts
 
 /**
- * apiClient - Unified HTTP client for communicating with the backend API.
- * Provides convenient methods: get, post, put, delete.
- * Automatically uses NEXT_PUBLIC_API_BASE_URL from environment variables.
- * Handles JSON serialization/deserialization and error reporting.
+ * Unified, type-safe API client for the application.
+ * Provides GET/POST/PUT/DELETE utilities + SSE streaming.
+ * Ensures consistent URL building, JSON parsing, and error handling.
  */
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-async function handleResponse<T>(res: Response): Promise<T> {
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} - ${text || res.statusText}`);
-  }
-  return text ? JSON.parse(text) : ({} as T);
-}
-
-async function buildUrl(path: string, params?: Record<string, any>): Promise<string> {
+/**
+ * Builds a full URL with optional query parameters.
+ */
+function buildUrl(path: string, params?: Record<string, any>): string {
   const url = new URL(path, BASE_URL);
   if (params) {
-    Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
+    Object.entries(params).forEach(([key, value]) =>
+      url.searchParams.set(key, String(value))
+    );
   }
   return url.toString();
 }
 
+/**
+ * Parses server response as JSON and ensures type-safety.
+ */
+async function handleResponse<T>(res: Response): Promise<T> {
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} - ${text || res.statusText}`);
+  }
+
+  if (!text) {
+    // Empty-body responses (204, 201 without body, etc.)
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    console.error("Failed to parse JSON:", error);
+    throw new Error("Invalid JSON returned from server");
+  }
+}
+
+/**
+ * Standard REST API client (GET, POST, PUT, DELETE)
+ */
 export const apiClient = {
-  /**
-   * Send a GET request
-   * @param path API path
-   * @param params Optional query parameters
-   */
   async get<T>(path: string, params?: Record<string, any>): Promise<T> {
-    const url = await buildUrl(path, params);
-    const res = await fetch(url, { credentials: "include" });
+    const url = buildUrl(path, params);
+    const res = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+    });
     return handleResponse<T>(res);
   },
 
-  /**
-   * Send a POST request
-   * @param path API path
-   * @param body Optional request body
-   */
   async post<T>(path: string, body?: any): Promise<T> {
-    const url = await buildUrl(path);
+    const url = buildUrl(path);
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,13 +82,8 @@ export const apiClient = {
     return handleResponse<T>(res);
   },
 
-  /**
-   * Send a PUT request
-   * @param path API path
-   * @param body Optional request body
-   */
   async put<T>(path: string, body?: any): Promise<T> {
-    const url = await buildUrl(path);
+    const url = buildUrl(path);
     const res = await fetch(url, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -83,20 +93,39 @@ export const apiClient = {
     return handleResponse<T>(res);
   },
 
-  /**
-   * Send a DELETE request
-   * @param path API path
-   * @param params Optional query parameters
-   */
   async delete<T>(path: string, params?: Record<string, any>): Promise<T> {
-    const url = await buildUrl(path, params);
-    const res = await fetch(url, { method: "DELETE", credentials: "include" });
+    const url = buildUrl(path, params);
+    const res = await fetch(url, {
+      method: "DELETE",
+      credentials: "include",
+    });
     return handleResponse<T>(res);
   },
 };
 
-// Backwards compatibility exports (optional)
+// shorthand exports
 export const apiGet = apiClient.get;
 export const apiPost = apiClient.post;
 export const apiPut = apiClient.put;
 export const apiDelete = apiClient.delete;
+
+/**
+ * Creates a typed Server-Sent Events (SSE) connection.
+ * Automatically includes credentials and query parameters.
+ */
+export function apiSSE<T>(
+  path: string,
+  params?: Record<string, any>
+): EventSource {
+  const url = new URL(path, BASE_URL);
+
+  if (params) {
+    Object.entries(params).forEach(([k, v]) =>
+      url.searchParams.set(k, String(v))
+    );
+  }
+
+  return new EventSource(url.toString(), {
+    withCredentials: true,
+  });
+}
