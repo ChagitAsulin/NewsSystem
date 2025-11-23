@@ -1,1 +1,40 @@
 /* components styles */
+
+/*
+תפקיד: עיצוב רכיבים ספציפיים – כרטיסי חדשות, כפתורים, טאגים, כותרות, ועוד.
+*/
+
+/* components.css */
+
+/* NewsCard styles */
+.news-card {
+  @apply bg-white shadow-md rounded-2xl overflow-hidden hover:shadow-xl transition-shadow duration-500 ease-in-out;
+}
+
+.news-card img {
+  @apply w-full h-48 object-cover transition-transform duration-500 ease-in-out hover:scale-105;
+}
+
+/* Entity Tags styles */
+.entity-tag {
+  @apply px-2 py-1 rounded-full text-xs font-medium transition-colors duration-300;
+}
+
+.entity-tag.person { @apply bg-blue-100 text-blue-800; }
+.entity-tag.location { @apply bg-green-100 text-green-800; }
+.entity-tag.org { @apply bg-purple-100 text-purple-800; }
+.entity-tag.misc { @apply bg-gray-100 text-gray-800; }
+
+/* Buttons */
+.btn {
+  @apply px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in {
+  animation: fadeIn 0.8s ease-in-out forwards;
+}

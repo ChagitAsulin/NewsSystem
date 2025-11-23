@@ -1,1 +1,37 @@
 /* global styles */
+
+/*
+תפקיד: עיצוב גלובלי של האתר, צבעים, טיפוגרפיה, רספונסיביות, והגדרות בסיסיות ל-Tailwind.
+*/
+
+/* globals.css */
+
+/* Reset and base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Body and default fonts */
+body {
+  @apply bg-gray-50 text-gray-800 font-sans leading-relaxed;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  @apply font-bold text-gray-900;
+}
+
+/* Links */
+a {
+  @apply text-blue-600 hover:text-blue-800 transition-colors duration-300;
+}
+
+/* Container */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  @apply transition-all duration-300 ease-in-out;
+}
