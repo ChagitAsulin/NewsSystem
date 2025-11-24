@@ -1,4 +1,3 @@
-
 name: CI
 on: [push, pull_request]
 jobs:
@@ -10,9 +9,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install UI
+
+      - name: Install UI dependencies
         working-directory: ui/web-mvc
-        run: npm install
+        run: npm ci
+
       - name: Type check
         working-directory: ui/web-mvc
         run: npx tsc --noEmit
+
+      - name: Build UI
+        working-directory: ui/web-mvc
+        run: npm run build
+
