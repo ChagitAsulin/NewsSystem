@@ -1,18 +1,45 @@
-
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # שלב 1: Checkout הקוד
       - uses: actions/checkout@v4
-      - name: Setup Node
+
+      # שלב 2: Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install UI
+          cache: 'npm'  # מאפשר cache אוטומטי של node_modules
+
+      # שלב 3: Install dependencies
+      - name: Install UI dependencies
         working-directory: ui/web-mvc
-        run: npm install
+        run: npm ci
+
+      # שלב 4: בדיקת סוגים TypeScript
       - name: Type check
         working-directory: ui/web-mvc
         run: npx tsc --noEmit
+
+      # שלב 5: Build UI
+      - name: Build UI
+        working-directory: ui/web-mvc
+        run: npm run build
+
+      # שלב 6: Optional - בדיקה שהחבילות הנחוצות קיימות
+      - name: Verify important packages
+        working-directory: ui/web-mvc
+        run: |
+          npm list mobx
+          npm list @tanstack/react-query
