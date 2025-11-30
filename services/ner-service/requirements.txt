@@ -3,7 +3,7 @@
 # ML / NLP
 # ------------------------------
 transformers==4.44.2
-torch==2.4.0
+torch==2.2.0+cpu
 
 # ------------------------------
 # Messaging
@@ -23,3 +23,5 @@ loguru>=0.7
 pytest>=8.3
 black>=24.4
 flake8>=7.1
+
+--extra-index-url https://download.pytorch.org/whl/cpu
