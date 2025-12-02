@@ -39,9 +39,16 @@ const rawEnv: Partial<EnvConfig> = {
  * Throws error if a required variable is missing.
  */
 function validateEnv(env: Partial<EnvConfig>): EnvConfig {
-  const missing = Object.entries(env).filter(([_, value]) => value === undefined && _ !== "KAFKA_USERNAME" && _ !== "KAFKA_PASSWORD");
+  const missing = Object.entries(env).filter(
+    ([key, value]) =>
+      value === undefined && key !== "KAFKA_USERNAME" && key !== "KAFKA_PASSWORD"
+  );
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.map(([key]) => key).join(", ")}`);
+    throw new Error(
+      `Missing required environment variables: ${missing
+        .map(([key]) => key)
+        .join(", ")}`
+    );
   }
   return env as EnvConfig;
 }

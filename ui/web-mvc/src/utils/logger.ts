@@ -7,56 +7,67 @@
 
 /**
  * @file logger.ts
- * @description Centralized logging utility for consistent and elegant console/log outputs.
- * Supports info, warning, error, and debug levels with timestamps and color formatting.
+ * @description Centralized logging utility for both Node.js and browser.
+ * Supports info, warn, error, debug levels with timestamps and project colors.
+ * Automatically detects environment and applies appropriate coloring.
  */
 
 import { DateUtils } from "./dates";
 
-/**
- * Logging levels
- */
 type LogLevel = "INFO" | "WARN" | "ERROR" | "DEBUG";
 
+// צבעי פרויקט
+const COLORS = {
+  INFO: "cyan",       // תכלת
+  WARN: "orange",     // כתום/אפרסק
+  ERROR: "red",       // אדום/ורוד
+  DEBUG: "purple",    // סגול
+};
+
 class Logger {
-  private static format(level: LogLevel, message: string) {
+  private static isBrowser = typeof window !== "undefined";
+
+  private static format(level: LogLevel, message: string): [string, string?] {
     const timestamp = DateUtils.toISO8601(new Date());
-    let colorStart = "";
-    const colorEnd = "\x1b[0m";
+    const fullMessage = `[${timestamp}] [${level}] ${message}`;
 
-    switch (level) {
-      case "INFO":
-        colorStart = "\x1b[34m"; // blue
-        break;
-      case "WARN":
-        colorStart = "\x1b[33m"; // yellow
-        break;
-      case "ERROR":
-        colorStart = "\x1b[31m"; // red
-        break;
-      case "DEBUG":
-        colorStart = "\x1b[36m"; // cyan
-        break;
+    if (Logger.isBrowser) {
+      // בדפדפן: מחזירים %c עם CSS
+      const color = COLORS[level] || "black";
+      return [`%c${fullMessage}`, `color: ${color}; font-weight: bold;`];
+    } else {
+      // Node.js: קונסול צבעוני עם ANSI codes
+      let colorStart = "";
+      const colorEnd = "\x1b[0m";
+      switch (level) {
+        case "INFO": colorStart = "\x1b[36m"; break; // תכלת
+        case "WARN": colorStart = "\x1b[33m"; break; // כתום/צהוב
+        case "ERROR": colorStart = "\x1b[31m"; break; // אדום
+        case "DEBUG": colorStart = "\x1b[35m"; break; // סגול
+      }
+      return [`${colorStart}${fullMessage}${colorEnd}`];
     }
-
-    return `${colorStart}[${timestamp}] [${level}] ${message}${colorEnd}`;
   }
 
   static info(message: string) {
-    console.log(Logger.format("INFO", message));
+    const args = Logger.format("INFO", message);
+    Logger.isBrowser ? console.log(...args) : console.log(...args);
   }
 
   static warn(message: string) {
-    console.warn(Logger.format("WARN", message));
+    const args = Logger.format("WARN", message);
+    Logger.isBrowser ? console.warn(...args) : console.warn(...args);
   }
 
   static error(message: string) {
-    console.error(Logger.format("ERROR", message));
+    const args = Logger.format("ERROR", message);
+    Logger.isBrowser ? console.error(...args) : console.error(...args);
   }
 
   static debug(message: string) {
     if (process.env.NODE_ENV !== "production") {
-      console.debug(Logger.format("DEBUG", message));
+      const args = Logger.format("DEBUG", message);
+      Logger.isBrowser ? console.debug(...args) : console.debug(...args);
     }
   }
 }

@@ -31,41 +31,49 @@ export class DateUtils {
    * @param options Intl.DateTimeFormatOptions
    * @returns Formatted date string
    */
-  static format(date: Date | string, locale: string = "he-IL", options?: Intl.DateTimeFormatOptions): string {
+  static format(
+    date: Date | string,
+    locale: string = "he-IL",
+    options?: Intl.DateTimeFormatOptions
+  ): string {
     const d = typeof date === "string" ? new Date(date) : date;
-    const defaultOptions: Intl.DateTimeFormatOptions = { 
-      year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" 
+    const defaultOptions: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     };
     return new Intl.DateTimeFormat(locale, options || defaultOptions).format(d);
   }
 
   /**
-   * Get relative time from a date to now (e.g., "2 hours ago").
+   * Get relative time from a date to now (e.g., "לפני 2 שעות").
    * Can be used for feeds and notifications.
    * @param date Date object or ISO string
-   * @param locale Optional locale string
+   * @param locale Optional locale string (default: 'he-IL')
    * @returns Relative time string
    */
-  static timeAgo(date: Date | string, locale: string = "en-US"): string {
+  static timeAgo(date: Date | string, locale: string = "he-IL"): string {
     const d = typeof date === "string" ? new Date(date) : date;
     const now = new Date();
     const seconds = Math.floor((now.getTime() - d.getTime()) / 1000);
 
     const intervals: Record<string, number> = {
-      year: 31536000,
-      month: 2592000,
-      week: 604800,
-      day: 86400,
-      hour: 3600,
-      minute: 60,
-      second: 1,
+      שנה: 31536000,
+      חודש: 2592000,
+      שבוע: 604800,
+      יום: 86400,
+      שעה: 3600,
+      דקה: 60,
+      שניה: 1,
     };
 
     for (const [unit, value] of Object.entries(intervals)) {
       const amount = Math.floor(seconds / value);
-      if (amount >= 1) return `${amount} ${unit}${amount > 1 ? "s" : ""} ago`;
+      if (amount >= 1) return `לפני ${amount} ${unit}`;
     }
 
-    return "just now";
+    return "עכשיו";
   }
 }
