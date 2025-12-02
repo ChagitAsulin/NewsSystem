@@ -1,10 +1,11 @@
 /* global styles */
 
-/*
-תפקיד: עיצוב גלובלי של האתר, צבעים, טיפוגרפיה, רספונסיביות, והגדרות בסיסיות ל-Tailwind.
-*/
-
 /* globals.css */
+
+/*
+תפקיד: עיצוב גלובלי של האתר עם צבעי מותג, טיפוגרפיה מודרנית, אנימציות קלילות, ורקעים נוצצים.
+מותאם לצבעי הפרויקט: תכלת, כחול, תורכיז, כתום, ורוד, סגול.
+*/
 
 /* Reset and base styles */
 @tailwind base;
@@ -13,17 +14,34 @@
 
 /* Body and default fonts */
 body {
-  @apply bg-gray-50 text-gray-800 font-sans leading-relaxed;
+  @apply bg-gradient-to-br from-sky-50 via-cyan-50 to-blue-50 text-gray-900 font-sans leading-relaxed;
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
 }
 
 /* Headings */
 h1, h2, h3, h4 {
-  @apply font-bold text-gray-900;
+  @apply font-bold text-gray-900 tracking-wide;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
 /* Links */
 a {
-  @apply text-blue-600 hover:text-blue-800 transition-colors duration-300;
+  @apply text-blue-600 hover:text-cyan-500 transition-colors duration-300;
+  position: relative;
+}
+a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, #22d3ee, #9333EA, #fb923c);
+  transition: width 0.3s ease-in-out;
+}
+a:hover::after {
+  width: 100%;
 }
 
 /* Container */
@@ -34,4 +52,29 @@ a {
 /* Smooth transitions for all interactive elements */
 * {
   @apply transition-all duration-300 ease-in-out;
+}
+
+/* Background gradient animation */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Sparkle effect for highlights */
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+.sparkle {
+  animation: sparkle 2s infinite ease-in-out;
+}
+
+/* Subtle card hover effect */
+.card-hover {
+  @apply transition-transform duration-700 ease-in-out;
+}
+.card-hover:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
