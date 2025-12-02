@@ -1,65 +1,39 @@
 //export default function EmptyState(){ return <div>EmptyState</div> }
 
-// src/views/EmptyState.tsx
 import React from "react";
+import { motion } from "framer-motion";
 
 interface EmptyStateProps {
-  /** 
-   * Title to display when the list is empty. 
-   * Example: "No news available"
-   */
   title?: string;
-
-  /** 
-   * Optional description to give more context. 
-   * Example: "Please check back later or change your filters."
-   */
   description?: string;
-
-  /** 
-   * Optional icon URL to visually represent empty state. 
-   * Example: "/icons/empty.svg"
-   */
   iconUrl?: string;
 }
 
 /**
- * EmptyState component
- * 
- * This component is used to show a friendly message when there is no data to display.
- * Can be used in a news feed, topic list, or any section where an empty state is meaningful.
- *
- * Props:
- * - title: Main message to show (optional, default: "Nothing here yet")
- * - description: Additional information (optional)
- * - iconUrl: URL of an icon to display (optional)
- *
- * Example usage:
- * <EmptyState 
- *    title="No articles found"
- *    description="Try selecting a different topic."
- *    iconUrl="/images/empty-news.png"
- * />
+ * EmptyState component with colorful gradient and animation
  */
-const EmptyState: React.FC<EmptyStateProps> = ({
-  title = "Nothing here yet",
-  description,
-  iconUrl,
-}) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ title = "Nothing here yet", description, iconUrl }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center text-gray-500">
+    <motion.div className="flex flex-col items-center justify-center p-8 text-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       {iconUrl && (
-        <img
+        <motion.img
           src={iconUrl}
           alt="Empty state icon"
           className="w-24 h-24 mb-4"
+          animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+          transition={{ repeat: Infinity, duration: 2 }}
         />
       )}
-      <h2 className="text-xl font-semibold">{title}</h2>
-      {description && <p className="mt-2 text-sm">{description}</p>}
-    </div>
+      <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-pink-400 to-purple-500 bg-clip-text text-transparent animate-pulse">
+        {title}
+      </h2>
+      {description && (
+        <motion.p className="mt-2 text-gray-500" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+          {description}
+        </motion.p>
+      )}
+    </motion.div>
   );
 };
 
 export default EmptyState;
-
