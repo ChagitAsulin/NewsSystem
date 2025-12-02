@@ -2,55 +2,40 @@
 
 /*
 תפקיד הקובץ:
-topicsStore.ts אחראי על ניהול מצב הנושאים. 
-רכיבי UI כמו TopicPicker או הפיד של חדשות יכולים לצרוך את ה־store הזה כדי להציג נושאים שנבחרו, 
+topicsStore.ts אחראי על ניהול מצב הנושאים עם אנימציות צבעוניות.
+רכיבי UI כמו TopicPicker או הפיד של חדשות יכולים לצרוך את ה־store הזה כדי להציג נושאים שנבחרו,
 לעדכן את ה־UI בזמן אמת, ולשלוח עדכונים ל־Kafka או API.
-
-יתרון מרכזי:
-
-רכיבי UI אחרים לא צריכים לדעת איך לנהל את המצב – הכל נעשה דרך ה־store.
-
-תמיכה באנימציות קלות ניתנת על ידי observables של MobX – כשנושא נבחר או מוסר, 
-הרכיב יכול לרנדר עם transition/animation.
 */
 
-/**
- * @file topicsStore.ts
- * @description
- * MobX store for managing news topics in the application.
- * Handles:
- * - Subscribed topics
- * - Selecting/deselecting topics
- * - Reactivity for UI components
- * - Persistence with localStorage (optional)
- *
- * This store allows the UI to reactively update whenever the user selects
- * or deselects topics, ensuring the news feed reflects user preferences immediately.
- */
-
 import { makeAutoObservable, runInAction } from "mobx";
+import { DateUtils } from '../../utils/dates';
 
 /**
- * Represents a single topic in the system.
+ * Represents a single topic in the system with UI styling info.
  */
 export interface Topic {
   id: string;
   name: string;
   selected: boolean;
+  color?: string; // צבע מותאם לפרויקט
+  lastToggled?: string; // זמן אחרון לשינוי עבור אנימציות
 }
 
 /**
  * TopicsStore
  * 
  * Manages state of available and selected topics.
- * Provides methods for updating selection and integrating with UI components.
+ * Provides methods for updating selection and integrating with UI components with animations.
  */
 export class TopicsStore {
   /** List of all available topics */
   topics: Topic[] = [];
 
+  /** Predefined color palette for selected topics */
+  private colors = ["#38BDF8", "#1E40AF", "#14B8A6", "#F97316", "#FB7185", "#9333EA", "#FDBA74"];
+
   constructor() {
-    makeAutoObservable(this); // Automatically makes all fields observable
+    makeAutoObservable(this);
   }
 
   /**
@@ -59,7 +44,11 @@ export class TopicsStore {
    */
   setTopics(newTopics: Topic[]) {
     runInAction(() => {
-      this.topics = newTopics.map(t => ({ ...t })); // clone to ensure observability
+      this.topics = newTopics.map((t, i) => ({
+        ...t,
+        color: this.colors[i % this.colors.length],
+        selected: t.selected || false,
+      }));
     });
   }
 
@@ -72,6 +61,7 @@ export class TopicsStore {
       const topic = this.topics.find(t => t.id === topicId);
       if (topic) {
         topic.selected = !topic.selected;
+        topic.lastToggled = DateUtils.toISO8601(new Date()); // timestamp for animation
       }
     });
   }
@@ -111,6 +101,7 @@ export class TopicsStore {
       runInAction(() => {
         this.topics.forEach(t => {
           t.selected = selectedIds.includes(t.id);
+          if (t.selected) t.lastToggled = DateUtils.toISO8601(new Date());
         });
       });
     }
@@ -121,4 +112,3 @@ export class TopicsStore {
  * Export a singleton store instance for app-wide usage
  */
 export const topicsStore = new TopicsStore();
-
