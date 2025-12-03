@@ -3,12 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { NewsItem } from "../models/domain/NewsItem";
 import { apiGet } from "../services_access/apiClient";
+import { useRealtime, RealtimeMessage } from "./useRealtime";
+
+/** צבעי הפרויקט */
+const COLORS = ["#00bfff", "#1e90ff", "#40e0d0", "#ffa500", "#ffb6c1", "#9370db", "#ffdab9"];
 
 /**
- * News item decorated with UI animation flags.
+ * News item decorated with UI animation and color flags.
  */
 export interface AnimatedNewsItem extends NewsItem {
   animate?: boolean; // smooth fade-in animation
+  color?: string;    // project-themed color
 }
 
 /**
@@ -24,27 +29,20 @@ export interface UseNewsFeedResult {
 /**
  * useNewsFeed Hook
  *
- * This hook powers the main News Feed experience.
- *
- * Features:
- * - Fetches news from backend with loading/error states
- * - Adds smooth fade-in animations for a premium UI feel
- * - Supports manual pull-to-refresh
- * - Automatically merges real-time notifications (if integrated externally)
- * - Optimized to avoid unnecessary re-renders
- *
- * This hook is a core part of the UI experience, providing the
- * foundation for an elegant, animated, professional-grade news feed.
+ * Powers the main News Feed experience:
+ * - Fetches news from backend
+ * - Adds UI animation & color coding
+ * - Merges real-time notifications
  */
 export function useNewsFeed(): UseNewsFeedResult {
   const [newsItems, setNewsItems] = useState<AnimatedNewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  /**
-   * Fetch news from backend.
-   * Includes fade-in animation on initial load.
-   */
+  /** Realtime notifications */
+  const { messages } = useRealtime<NewsItem>("/news/stream");
+
+  /** Fetch news from backend */
   const fetchNews = useCallback(async () => {
     setLoading(true);
     setError(false);
@@ -52,15 +50,16 @@ export function useNewsFeed(): UseNewsFeedResult {
     try {
       const data = await apiGet<NewsItem[]>("/news");
 
-      // Add animation flag to each news item for entrance transitions
-      const animated = data.map((item) => ({
+      // Assign colors and animation flags
+      const animated = data.map((item, index) => ({
         ...item,
         animate: true,
+        color: COLORS[index % COLORS.length],
       }));
 
       setNewsItems(animated);
 
-      // Remove animation after it has played
+      // Remove animation after fade-in
       setTimeout(() => {
         setNewsItems((prev) =>
           prev.map((item) => ({ ...item, animate: false }))
@@ -74,9 +73,28 @@ export function useNewsFeed(): UseNewsFeedResult {
     }
   }, []);
 
-  /**
-   * Initial fetch
-   */
+  /** Integrate realtime messages */
+  useEffect(() => {
+    messages.forEach((msg: RealtimeMessage<NewsItem>) => {
+      if (msg.type === "new_news") {
+        const newItem: AnimatedNewsItem = {
+          ...msg.payload,
+          animate: true,
+          color: COLORS[newsItems.length % COLORS.length],
+        };
+        setNewsItems((prev) => [newItem, ...prev]);
+
+        // Remove animation flag after fade-in
+        setTimeout(() => {
+          setNewsItems((prev) =>
+            prev.map((item) => ({ ...item, animate: false }))
+          );
+        }, 650);
+      }
+    });
+  }, [messages, newsItems.length]);
+
+  /** Initial fetch */
   useEffect(() => {
     fetchNews();
   }, [fetchNews]);

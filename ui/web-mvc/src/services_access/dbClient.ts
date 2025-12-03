@@ -9,7 +9,7 @@ export const dbClient = {
 };
 */
 
-import { apiGet } from "./apiClient";
+import { apiGet, apiPost } from "./apiClient";
 import type { NewsItemDTO } from "@/models/dto/NewsItemDTO";
 
 /**
@@ -39,6 +39,16 @@ export const dbClient = {
     console.info(`dbClient.getTrendingTopics: limit=${limit}`);
     return apiGet<string[]>("/topics/trending", { limit });
   },
+
+  /** Subscribe to a topic */
+  subscribeTopic: async (code: string): Promise<void> => {
+    console.info(`dbClient.subscribeTopic: ${code}`);
+    await apiPost("/topics/subscribe", { code });
+  },
+
+  /** Unsubscribe from a topic */
+  unsubscribeTopic: async (code: string): Promise<void> => {
+    console.info(`dbClient.unsubscribeTopic: ${code}`);
+    await apiPost("/topics/unsubscribe", { code });
+  },
 };
-
-

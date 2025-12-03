@@ -1,54 +1,49 @@
 //export function useTopics(){ return []; }
 
 import { useEffect, useState } from "react";
-import { apiGet, apiPost } from "../services_access/apiClient";
+import { TopicsRepository } from "../repositories/TopicsRepository";
 
 export interface Topic {
   code: string;
   name: string;
   selected: boolean;
+  color?: string;
   /** UI-only animation flag */
   animate?: boolean;
 }
 
+/** צבעי הפרויקט */
+const COLORS = ["#00bfff", "#1e90ff", "#40e0d0", "#ffa500", "#ffb6c1", "#9370db", "#ffdab9"];
+
 /**
  * useTopics Hook
- *
- * Provides a full lifecycle for topic management:
- * - Fetches topics from backend
- * - Manages user selection
- * - Persists topic subscription/unsubscription
- * - Supports UI animations (fade-in on load, highlight on select)
- *
- * This hook is essential for filtering the news feed
- * and enabling personalized real-time notifications.
+ * ----------------
+ * Handles full lifecycle of topic management:
+ * fetch, select/unselect, backend sync, UI animations, colors.
  */
 export function useTopics() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  /** Fetch topics from backend and assign colors */
   useEffect(() => {
     const fetchTopics = async () => {
       try {
-        const data = await apiGet<Omit<Topic, "selected">[]>("/topics");
-
-        // Add animation + initial states
-        const animated = data.map((t) => ({
-          ...t,
+        const codes = await TopicsRepository.getAll();
+        const animated = codes.map((code, i) => ({
+          code,
+          name: code.charAt(0).toUpperCase() + code.slice(1), // human-readable
           selected: false,
-          animate: true, // fade-in animation
+          animate: true,
+          color: COLORS[i % COLORS.length],
         }));
-
         setTopics(animated);
 
-        // Remove animation flag after animation ends
+        // Remove animation after it finishes
         setTimeout(() => {
           setTopics((prev) =>
-            prev.map((t) => ({
-              ...t,
-              animate: false,
-            }))
+            prev.map((t) => ({ ...t, animate: false }))
           );
         }, 600);
       } catch (err) {
@@ -62,9 +57,7 @@ export function useTopics() {
     fetchTopics();
   }, []);
 
-  /**
-   * Toggles a topic selection and updates backend subscription.
-   */
+  /** Toggle topic selection and sync with backend */
   const toggleTopic = async (code: string) => {
     setTopics((prev) =>
       prev.map((t) =>
@@ -80,14 +73,14 @@ export function useTopics() {
       );
     }, 400);
 
-    try {
-      const topic = topics.find((t) => t.code === code);
-      if (!topic) return;
+    const topic = topics.find((t) => t.code === code);
+    if (!topic) return;
 
+    try {
       if (!topic.selected) {
-        await apiPost("/topics/subscribe", { code });
+        await TopicsRepository.subscribe(code);
       } else {
-        await apiPost("/topics/unsubscribe", { code });
+        await TopicsRepository.unsubscribe(code);
       }
     } catch (err) {
       console.error("Subscription update failed:", err);

@@ -1,9 +1,6 @@
 //export function useRealtime(){ return null; }
 
-// src/hooks/useRealtime.ts
-
 import { useEffect, useRef, useState } from "react";
-import { apiSSE } from "../services_access/apiClient";
 
 /**
  * Shape of a realtime SSE event coming from the backend.
@@ -14,11 +11,10 @@ export interface RealtimeMessage<T> {
 }
 
 /**
- * useRealtime
+ * useRealtime Hook
  *
- * Establishes an SSE (Server-Sent Events) connection to a backend stream.
- * Automatically handles reconnection, incoming messages,
- * cleanup on unmount, and provides typed realtime events.
+ * Establishes a typed SSE connection to a backend stream.
+ * Handles reconnection, incoming messages, and cleanup on unmount.
  */
 export function useRealtime<T>(path: string) {
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -26,29 +22,42 @@ export function useRealtime<T>(path: string) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const es = apiSSE<T>(path);
-    eventSourceRef.current = es;
-    setConnected(true);
+    let retryTimeout: number | null = null;
 
-    // Handle incoming SSE messages
-    es.onmessage = (event: MessageEvent) => {
-      try {
-        const parsed = JSON.parse(event.data) as RealtimeMessage<T>;
-        setMessages((prev) => [...prev, parsed]);
-      } catch (error) {
-        console.error("Invalid SSE message:", error);
-      }
+    const connect = () => {
+      const es = new EventSource(path);
+      eventSourceRef.current = es;
+      setConnected(true);
+
+      es.onmessage = (event: MessageEvent) => {
+        try {
+          const parsed = JSON.parse(event.data) as RealtimeMessage<T>;
+          setMessages((prev) => [...prev, parsed]);
+        } catch (error) {
+          console.error("Invalid SSE message:", error);
+        }
+      };
+
+      es.onerror = () => {
+        console.error("SSE connection error, retrying...");
+        setConnected(false);
+        es.close();
+
+        // Retry connection after 2 seconds
+        retryTimeout = window.setTimeout(connect, 2000);
+      };
     };
 
-    // Connection error handler
-    es.onerror = (error: Event) => {
-      console.error("SSE Error:", error);
-      setConnected(false);
-    };
+    connect();
 
-    // Cleanup on unmount
     return () => {
-      es.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
       setConnected(false);
     };
   }, [path]);
