@@ -8,17 +8,18 @@ export const mediaClient = {
 */
 
 /**
- * @file mediaClient.ts
- * @description Constructs URLs for media assets (images, videos).
- * Abstracts public ID to full URL conversion, supporting dynamic media loading.
+ * Media Client to construct URLs for images/videos
  */
-
 export const mediaClient = {
   /**
-   * Returns a fully qualified image URL from a public ID.
-   * @param publicId - Media public ID
-   * @returns Full URL to the image or undefined if no ID
+   * Converts public media ID to full URL
+   * @param publicId Media public ID
    */
-  toUrl: (publicId?: string): string | undefined =>
-    publicId ? `${process.env.NEXT_PUBLIC_MEDIA_BASE}/image/upload/${publicId}.jpg` : undefined,
+  toUrl: (publicId?: string): string | undefined => {
+    if (!publicId) console.warn("mediaClient.toUrl called without publicId");
+    const url = publicId ? `${process.env.NEXT_PUBLIC_MEDIA_BASE}/image/upload/${publicId}.jpg` : undefined;
+    console.info(`mediaClient.toUrl -> ${url}`);
+    return url;
+  },
 };
+

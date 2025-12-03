@@ -9,25 +9,20 @@ export function connectNotificationsSSE(url: string, onMessage: (ev: MessageEven
 */
 
 /**
- * @file kafkaClient.ts
- * @description Handles real-time notifications via Server-Sent Events (SSE).
- * Provides a lightweight wrapper to connect and disconnect from SSE streams.
+ * Connect to SSE notifications
+ * @param url SSE endpoint
+ * @param onMessage Callback for message event
+ * @returns Function to close the connection
  */
-
 export function connectNotificationsSSE(
   url: string,
   onMessage: (ev: MessageEvent) => void
 ): () => void {
-  /**
-   * Connects to SSE server at the given URL.
-   * @param url - Full URL to SSE endpoint
-   * @param onMessage - Callback for each message received
-   * @returns A function to close the SSE connection
-   */
+  console.info(`kafkaClient: connecting SSE -> ${url}`);
   const es = new EventSource(url, { withCredentials: true });
   es.onmessage = onMessage;
-
-  // Can add error, reconnect logic here if needed
-
-  return () => es.close();
+  return () => {
+    console.info(`kafkaClient: closing SSE -> ${url}`);
+    es.close();
+  };
 }
