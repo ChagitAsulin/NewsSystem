@@ -13,9 +13,11 @@
  * - topic_code: topic the notification refers to
  */
 
+// models/dto/NotificationDTO.ts
 export interface NotificationDTO {
   id: string;
-  news_id: string;
-  created_at: string; // ISO 8601
-  topic_code: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
 }

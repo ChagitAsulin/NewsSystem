@@ -24,44 +24,17 @@ export type NewsItemDTO = {
  * - Gateways and queues may omit fields in certain flows.
  */
 
-export type NewsItemDTO = {
-  /** Backend-provided ID (string from DB or pipeline) */
+// models/dto/NewsItemDTO.ts
+import type { Entity } from "../domain/Entity";
+
+export interface NewsItemDTO {
   id: string;
-
-  /** Headline/title as sent by the backend */
   title: string;
+  content: string;
+  publishedAt: string;
+  source: string;
+  url?: string;
 
-  /** Raw summary/description field */
-  summary: string;
-
-  /**
-   * Optional public ID for image storage services (e.g., Cloudinary).
-   * The UI never uses this directly — mediaClient resolves it into imageUrl.
-   */
-  image_public_id?: string;
-
-  /** Topic codes (optional because pipeline may omit them in partial pushes) */
-  topics?: string[];
-
-  /** Zero-shot classification label */
-  classification?: string;
-
-  /** UI or backend-generated filtering tags */
-  tags?: string[];
-
-  /**
-   * Raw NER entities as returned by the model.
-   * Adapters are responsible for normalizing them into the Entity domain format.
-   */
-  entities?: Array<{
-    type: 'person' | 'location' | 'org' | 'misc';
-    value: string;
-    salience?: number;
-  }>;
-
-  /**
-   * Raw timestamp as ISO string.
-   * adapters → convert to Date (domain: `createdAt: Date`)
-   */
-  created_at?: string;
-};
+  entities: Entity[];
+  topics: string[];
+}
