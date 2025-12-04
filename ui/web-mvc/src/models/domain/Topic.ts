@@ -9,7 +9,11 @@
 
 // models/domain/Topic.ts
 export interface Topic {
-  id: string;
-  name: string;
-  description?: string;
+  id: string;            // מזהה ייחודי
+  code: string;          // קוד מה-API
+  name: string;          // שם קריא למשתמש
+  selected: boolean;     // האם הנושא נבחר ב-UI
+  color?: string;        // צבע להצגה
+  animate?: boolean;     // דגל אנימציה UI בלבד
+  description?: string;  // תיאור אופציונלי
 }

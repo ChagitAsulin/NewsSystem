@@ -14,41 +14,90 @@ export const NewsRepository = {
 };
 */
 
-import { dbClient } from "@/services_access/dbClient";
-import { mapNewsItem } from "@/adapters/newsMapper";
-import type { NewsItem } from "@/models/domain/NewsItem";
+import { dbClient } from "../services_access/dbClient";
+import { NewsItem } from "../models/domain/NewsItem";
+import { Entity } from "../models/domain/Entity"; 
+import { NewsItemDTO } from "../models/dto/NewsItemDTO";
 
-/**
- * NewsRepository
- * ----------------------
- * This repository centralizes all data operations related to news items.
- * It fetches data from the dbClient, maps DTOs to domain models,
- * and abstracts away low-level API or database details.
- * 
- * Responsibilities:
- * - Encapsulates all News-specific data access logic.
- * - Ensures consistent mapping from DTOs to domain objects.
- * - Provides type-safe methods for getting single or multiple news items.
- */
 export const NewsRepository = {
-  /**
-   * Fetch a single news item by its ID.
-   * @param id - Unique identifier of the news item
-   * @returns Promise resolving to a mapped NewsItem
-   */
-  async getById(id: string): Promise<NewsItem> {
-    const dto = await dbClient.getNewsById(id);
-    return mapNewsItem(dto);
+  async getAll(): Promise<NewsItem[]> {
+    const dtos = await dbClient.getLatestByTopics([]);
+    return dtos.map((dto) => {
+      const entities: Entity[] = (dto.entities ?? []).map((e: any) => ({
+        value: e.value || e.name || "",
+        type: e.type || "misc",
+        confidence: e.salience ?? e.confidence,
+      }));
+
+      return {
+        id: dto.id,
+        title: dto.title,
+        content: dto.content,
+        summary: dto.summary,
+        imageUrl: dto.image_public_id ? `/media/${dto.image_public_id}` : undefined,
+        topics: dto.topics ?? [],
+        classification: dto.classification ?? "",
+        tags: dto.tags ?? [],
+        entities,
+        createdAt: dto.created_at ? new Date(dto.created_at) : new Date(),
+        publishedAt: dto.published_at ? new Date(dto.published_at) : new Date(),
+        source: dto.source ?? "",
+      };
+    });
   },
 
-  /**
-   * Fetch latest news items for specific topics.
-   * @param topics - Array of topic strings
-   * @param limit - Maximum number of items to return (default 50)
-   * @returns Promise resolving to an array of mapped NewsItem objects
-   */
+  async getById(id: string): Promise<NewsItem | null> {
+    try {
+      const dto = await dbClient.getNewsById(id);
+      const entities: Entity[] = (dto.entities ?? []).map((e: any) => ({
+        value: e.value || e.name || "",
+        type: e.type || "misc",
+        confidence: e.salience ?? e.confidence,
+      }));
+
+      return {
+        id: dto.id,
+        title: dto.title,
+        content: dto.content,
+        summary: dto.summary,
+        imageUrl: dto.image_public_id ? `/media/${dto.image_public_id}` : undefined,
+        topics: dto.topics ?? [],
+        classification: dto.classification ?? "",
+        tags: dto.tags ?? [],
+        entities,
+        createdAt: dto.created_at ? new Date(dto.created_at) : new Date(),
+        publishedAt: dto.published_at ? new Date(dto.published_at) : new Date(),
+        source: dto.source ?? "",
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  /** ✅ גרסת getLatest מקצועית לתמיכה ב־UI */
   async getLatest(topics: string[], limit = 50): Promise<NewsItem[]> {
-    const list = await dbClient.getLatestByTopics(topics, limit);
-    return list.map(mapNewsItem);
+    const dtos = await dbClient.getLatestByTopics(topics, limit);
+    return dtos.map((dto) => {
+      const entities: Entity[] = (dto.entities ?? []).map((e: any) => ({
+        value: e.value || e.name || "",
+        type: e.type || "misc",
+        confidence: e.salience ?? e.confidence,
+      }));
+
+      return {
+        id: dto.id,
+        title: dto.title,
+        content: dto.content,
+        summary: dto.summary,
+        imageUrl: dto.image_public_id ? `/media/${dto.image_public_id}` : undefined,
+        topics: dto.topics ?? [],
+        classification: dto.classification ?? "",
+        tags: dto.tags ?? [],
+        entities,
+        createdAt: dto.created_at ? new Date(dto.created_at) : new Date(),
+        publishedAt: dto.published_at ? new Date(dto.published_at) : new Date(),
+        source: dto.source ?? "",
+      };
+    }).slice(0, limit);
   },
 };

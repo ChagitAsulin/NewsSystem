@@ -10,45 +10,37 @@ export const dbClient = {
 */
 
 import { apiGet, apiPost } from "./apiClient";
-import type { NewsItemDTO } from "@/models/dto/NewsItemDTO";
+import type { NewsItemDTO } from "../models/dto/NewsItemDTO";
+import type { NotificationDTO } from "../models/dto/NotificationDTO";
 
 /**
- * Database Client abstraction for news and topics endpoints
+ * Database Client abstraction for news, topics, and notifications endpoints
  */
 export const dbClient = {
-  /** Fetch a single news item by ID */
-  getNewsById: async (id: string): Promise<NewsItemDTO> => {
-    console.info(`dbClient.getNewsById: ${id}`);
-    return apiGet<NewsItemDTO>(`/news/${id}`);
-  },
+  // News
+  getNewsById: async (id: string): Promise<NewsItemDTO> =>
+    apiGet(`/news/${id}`),
 
-  /** Fetch latest news filtered by topics */
-  getLatestByTopics: async (topics: string[], limit = 50): Promise<NewsItemDTO[]> => {
-    console.info(`dbClient.getLatestByTopics: ${topics.join(", ")} limit=${limit}`);
-    return apiGet<NewsItemDTO[]>("/news", { topics: topics.join(","), limit });
-  },
+  getLatestByTopics: async (topics: string[], limit = 50): Promise<NewsItemDTO[]> =>
+    apiGet("/news", { topics: topics.join(","), limit }),
 
-  /** Get all topics */
-  getTopics: async (): Promise<string[]> => {
-    console.info("dbClient.getTopics called");
-    return apiGet<string[]>("/topics");
-  },
+  // Topics
+  getTopics: async (): Promise<string[]> =>
+    apiGet("/topics"),
 
-  /** Get trending topics */
-  getTrendingTopics: async (limit = 10): Promise<string[]> => {
-    console.info(`dbClient.getTrendingTopics: limit=${limit}`);
-    return apiGet<string[]>("/topics/trending", { limit });
-  },
+  getTrendingTopics: async (limit = 10): Promise<string[]> =>
+    apiGet("/topics/trending", { limit }),
 
-  /** Subscribe to a topic */
-  subscribeTopic: async (code: string): Promise<void> => {
-    console.info(`dbClient.subscribeTopic: ${code}`);
-    await apiPost("/topics/subscribe", { code });
-  },
+  subscribeTopic: async (code: string): Promise<void> =>
+    apiPost(`/topics/${code}/subscribe`),
 
-  /** Unsubscribe from a topic */
-  unsubscribeTopic: async (code: string): Promise<void> => {
-    console.info(`dbClient.unsubscribeTopic: ${code}`);
-    await apiPost("/topics/unsubscribe", { code });
-  },
+  unsubscribeTopic: async (code: string): Promise<void> =>
+    apiPost(`/topics/${code}/unsubscribe`),
+
+  // Notifications
+  getNotifications: async (): Promise<NotificationDTO[]> =>
+    apiGet("/notifications"),
+
+  getNotificationsForNews: async (newsId: string): Promise<NotificationDTO[]> =>
+    apiGet(`/notifications/news/${newsId}`),
 };

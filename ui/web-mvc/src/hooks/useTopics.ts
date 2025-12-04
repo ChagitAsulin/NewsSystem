@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { TopicsRepository } from "../repositories/TopicsRepository";
 
 export interface Topic {
+  id: string;
   code: string;
   name: string;
   selected: boolean;
   color?: string;
-  /** UI-only animation flag */
-  animate?: boolean;
+  animate?: boolean; // UI-only animation
 }
 
 /** צבעי הפרויקט */
@@ -30,21 +30,17 @@ export function useTopics() {
   useEffect(() => {
     const fetchTopics = async () => {
       try {
-        const codes = await TopicsRepository.getAll();
-        const animated = codes.map((code, i) => ({
-          code,
-          name: code.charAt(0).toUpperCase() + code.slice(1), // human-readable
-          selected: false,
+        const list = await TopicsRepository.getAll();
+        const animated = list.map((t, i) => ({
+          ...t,
           animate: true,
-          color: COLORS[i % COLORS.length],
+          color: t.color ?? COLORS[i % COLORS.length],
         }));
         setTopics(animated);
 
         // Remove animation after it finishes
         setTimeout(() => {
-          setTopics((prev) =>
-            prev.map((t) => ({ ...t, animate: false }))
-          );
+          setTopics((prev) => prev.map((t) => ({ ...t, animate: false })));
         }, 600);
       } catch (err) {
         console.error("Failed to fetch topics:", err);
@@ -61,16 +57,12 @@ export function useTopics() {
   const toggleTopic = async (code: string) => {
     setTopics((prev) =>
       prev.map((t) =>
-        t.code === code
-          ? { ...t, selected: !t.selected, animate: true }
-          : t
+        t.code === code ? { ...t, selected: !t.selected, animate: true } : t
       )
     );
 
     setTimeout(() => {
-      setTopics((prev) =>
-        prev.map((t) => ({ ...t, animate: false }))
-      );
+      setTopics((prev) => prev.map((t) => ({ ...t, animate: false })));
     }, 400);
 
     const topic = topics.find((t) => t.code === code);

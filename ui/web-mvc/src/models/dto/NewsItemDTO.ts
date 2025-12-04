@@ -24,17 +24,33 @@ export type NewsItemDTO = {
  * - Gateways and queues may omit fields in certain flows.
  */
 
-// models/dto/NewsItemDTO.ts
-import type { Entity } from "../domain/Entity";
-
+/**
+ * DTO representing raw news from backend/API.
+ * Fields match the API (snake_case) and are mapped by adapters.
+ */
 export interface NewsItemDTO {
   id: string;
   title: string;
   content: string;
-  publishedAt: string;
-  source: string;
-  url?: string;
+  summary?: string;
 
-  entities: Entity[];
-  topics: string[];
+  // image file public id (Cloudinary / S3)
+  image_public_id?: string;
+
+  topics?: string[];
+  classification?: string;
+  tags?: string[];
+
+  entities?: EntityDTO[];
+
+  published_at: string;
+  created_at: string;
+
+  source?: string;
+}
+
+export interface EntityDTO {
+  type: string; // person, org, gpe, loc, misc
+  name: string; // entity value
+  confidence?: number; 
 }

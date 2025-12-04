@@ -31,17 +31,22 @@ export type NewsItem = {
  * The model is purposely kept lightweight — heavier transformations occur in adapters.
  */
 
-// models/domain/NewsItem.ts
-import type { Entity } from "./Entity";
+import { Entity } from "./Entity";
 
+/**
+ * Domain model representing a normalized News Item.
+ */
 export interface NewsItem {
   id: string;
   title: string;
   content: string;
-  publishedAt: string;
-  source: string;
-  url?: string;
-
-  entities: Entity[];
+  summary?: string;
+  imageUrl?: string;
   topics: string[];
+  classification?: string;
+  tags: string[];
+  entities: Entity[];
+  publishedAt: Date;
+  createdAt: Date;
+  source?: string;
 }

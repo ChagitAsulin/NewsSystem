@@ -10,17 +10,16 @@
  * CSS mapping and color theming in the UI.
  */
 
-// models/domain/Entity.ts
 export type EntityType =
   | "person"
-  | "org"
-  | "gpe"       // Geo Political Entity
   | "loc"
+  | "gpe"
+  | "org"
   | "product"
   | "misc";
 
 export interface Entity {
-  value: string;
   type: EntityType;
-  confidence?: number; // כמו salience, אך אוניברסלי יותר
+  value: string;
+  salience?: number;
 }

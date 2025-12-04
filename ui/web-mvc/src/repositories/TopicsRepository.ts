@@ -1,31 +1,29 @@
 //export const TopicsRepository={};
 
-import { dbClient } from "@/services_access/dbClient";
+import { dbClient } from "../services_access/dbClient";
+import { Topic } from "../models/domain/Topic";
 
 /**
  * TopicsRepository
- * ----------------------
- * Manages all topic-related data access.
- * Encapsulates fetching, subscribing, unsubscribing, and trending logic.
+ * Handles all topic CRUD and subscriptions
  */
 export const TopicsRepository = {
-  /** Fetch all topics */
-  async getAll(): Promise<string[]> {
-    return dbClient.getTopics();
+  async getAll(): Promise<Topic[]> {
+    const codes = await dbClient.getTopics();
+    return codes.map((code, i) => ({
+      id: code, // מזהה ייחודי
+      code,
+      name: code.charAt(0).toUpperCase() + code.slice(1),
+      color: ["#4FC3F7","#2196F3","#00BCD4","#FF9800","#FFAB91","#E91E63","#9C27B0"][i % 7],
+      selected: false, // חובה לפי ממשק Topic
+    }));
   },
 
-  /** Fetch trending topics */
-  async getTrending(limit = 10): Promise<string[]> {
-    return dbClient.getTrendingTopics(limit);
-  },
-
-  /** Subscribe to a topic */
   async subscribe(code: string): Promise<void> {
-    return dbClient.subscribeTopic(code);
+    await dbClient.subscribeTopic(code);
   },
 
-  /** Unsubscribe from a topic */
   async unsubscribe(code: string): Promise<void> {
-    return dbClient.unsubscribeTopic(code);
+    await dbClient.unsubscribeTopic(code);
   },
 };

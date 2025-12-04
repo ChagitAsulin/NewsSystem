@@ -13,11 +13,15 @@
  * - topic_code: topic the notification refers to
  */
 
-// models/dto/NotificationDTO.ts
+/**
+ * DTO used by notification endpoints or SSE stream.
+ */
 export interface NotificationDTO {
   id: string;
-  title: string;
-  message: string;
-  createdAt: string;
-  read: boolean;
+  news_id: string;
+  topic_code: string;
+  created_at: string;
+  title?: string;
+  message?: string;
+  read?: boolean;
 }

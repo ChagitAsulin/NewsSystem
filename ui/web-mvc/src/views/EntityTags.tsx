@@ -2,21 +2,30 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Entity } from "../models/domain/NewsItem";
+
+export type EntityType = "person" | "loc" | "gpe" | "org" | "misc" | "product";
+
+export interface Entity {
+  type: EntityType;
+  value: string;
+  salience?: number;
+}
 
 export interface EntityTagsProps {
   entities: Entity[];
 }
 
 const EntityTags: React.FC<EntityTagsProps> = ({ entities }) => {
-  const getTypeClass = (type: Entity["type"]) => {
+  const getTypeClass = (type: EntityType) => {
     switch (type) {
       case "person":
         return "bg-gradient-to-r from-cyan-300 via-blue-400 to-blue-500 text-white";
-      case "location":
+      case "loc":
+      case "gpe":
         return "bg-gradient-to-r from-teal-300 via-cyan-400 to-blue-400 text-white";
       case "org":
         return "bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 text-white";
+      case "product":
       case "misc":
       default:
         return "bg-gradient-to-r from-pink-300 via-purple-400 to-purple-500 text-white";
@@ -28,9 +37,15 @@ const EntityTags: React.FC<EntityTagsProps> = ({ entities }) => {
       {entities.map((entity, idx) => (
         <motion.span
           key={idx}
-          className={`px-3 py-1 rounded-full text-xs font-semibold cursor-pointer ${getTypeClass(entity.type)}`}
-          title={`Type: ${entity.type}`}
-          whileHover={{ scale: 1.2, rotate: [0, 3, -3, 0], boxShadow: "0px 4px 12px rgba(0,0,0,0.25)" }}
+          className={`px-3 py-1 rounded-full text-xs font-semibold cursor-pointer ${getTypeClass(
+            entity.type
+          )}`}
+          title={`Type: ${entity.type}${entity.salience ? ` | confidence: ${entity.salience}` : ""}`}
+          whileHover={{
+            scale: 1.2,
+            rotate: [0, 3, -3, 0],
+            boxShadow: "0px 4px 12px rgba(0,0,0,0.25)",
+          }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: idx * 0.05 }}
