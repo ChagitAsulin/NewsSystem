@@ -63,6 +63,11 @@ services:
       KAFKA_TOPICS: raw_news,classified_news,enriched_news,notifications
       GATEWAY_HOST: 0.0.0.0
       GATEWAY_PORT: 8000
+      FIREBASE_CREDENTIALS: /app/firebase-key.json
+      FIREBASE_PROJECT_ID: news-system-project
+      FIREBASE_COLLECTION: news
+    volumes:
+      - ./firebase-key.json:/app/firebase-key.json:ro
     ports: ["8000:8000"]
     depends_on:
       redpanda:
@@ -80,6 +85,7 @@ services:
       retries: 10
     networks: [app-net]
     restart: unless-stopped
+    
 
   # ---------- UI (Next.js) ----------
   ui:
@@ -191,4 +197,24 @@ services:
       kafka-init:
         condition: service_completed_successfully
     networks: [app-net]
+    
+  news-store:
+    build:
+      context: ./services/news-store
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      TOPIC_IN: enriched_news
+      FIREBASE_CREDENTIALS: /app/firebase-key.json
+      FIREBASE_PROJECT_ID: news-system-project
+      FIREBASE_COLLECTION: news
+    volumes:
+      - ./firebase-key.json:/app/firebase-key.json:ro
+    depends_on:
+      redpanda:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+    networks: [app-net]
     restart: unless-stopped
+

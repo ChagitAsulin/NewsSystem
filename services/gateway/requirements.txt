@@ -32,3 +32,5 @@ pytest-asyncio>=0.23       # בדיקות אסינכרוניות
 black>=24.4                # עיצוב קוד אוטומטי
 flake8>=7.1                # בדיקת סגנון קוד
 
+firebase-admin==6.5.0
+# Firebase Admin SDK for Firestore integration
