@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { NewsRepository } from "@/repositories/NewsRepository";
 import type { NewsItem } from "@/models/domain/NewsItem";
+import Link from "next/link";
 
 export default function News() {
   const [items, setItems] = useState<NewsItem[]>([]);
@@ -24,13 +25,15 @@ export default function News() {
   return (
     <div style={{padding:16, display:"grid", gap:12}}>
       {items.map(n => (
-        <div key={n.id} style={{border:"1px solid #ddd", borderRadius:8, padding:12}}>
-          <div style={{fontWeight:700}}>{n.title}</div>
-          <div style={{opacity:.8}}>{n.summary}</div>
-          <div style={{fontSize:12, marginTop:6}}>
-            topics: {n.topics?.join(", ")} | class: {n.classification}
-          </div>
-        </div>
+        <Link key={n.id} href={`/news/${n.id}`}>
+          <a style={{border:"1px solid #ddd", borderRadius:8, padding:12, display:"block", textDecoration:"none", color:"inherit"}}>
+            <div style={{fontWeight:700}}>{n.title}</div>
+            <div style={{opacity:.8}}>{n.summary}</div>
+            <div style={{fontSize:12, marginTop:6}}>
+              topics: {n.topics?.join(", ")} | class: {n.classification}
+            </div>
+          </a>
+        </Link>
       ))}
     </div>
   );
