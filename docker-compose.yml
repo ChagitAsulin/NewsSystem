@@ -66,6 +66,12 @@ services:
       FIREBASE_CREDENTIALS: /app/firebase-key.json
       FIREBASE_PROJECT_ID: news-system-project
       FIREBASE_COLLECTION: news
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY}
+      HUGGINGFACE_NER_MODEL: dslim/bert-base-NER
+      CLOUDINARY_CLOUD_NAME: dwhnclxja
+      CLOUDINARY_API_KEY: 327482829241744
+      CLOUDINARY_API_SECRET: TVIQtKsvK9KG9PclgvJqyPFKA64
+
     volumes:
       - ./firebase-key.json:/app/firebase-key.json:ro
     ports: ["8000:8000"]

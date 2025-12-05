@@ -1,36 +1,31 @@
-//export default function EntityTags(){ return <div>EntityTags</div> }
-
+// src/views/EntityTags.tsx
 import React from "react";
 import { motion } from "framer-motion";
+import type { Entity as DomainEntity } from "../models/domain/NewsItem";
 
-export type EntityType = "person" | "loc" | "gpe" | "org" | "misc" | "product";
-
-export interface Entity {
-  type: EntityType;
-  value: string;
-  salience?: number;
-}
+// נשתמש בטיפוס מהדומיין
+export type Entity = DomainEntity;
 
 export interface EntityTagsProps {
   entities: Entity[];
 }
 
 const EntityTags: React.FC<EntityTagsProps> = ({ entities }) => {
-  const getTypeClass = (type: EntityType) => {
+  const getTypeClass = (type: Entity["type"]) => {
     switch (type) {
       case "person":
         return "bg-gradient-to-r from-cyan-300 via-blue-400 to-blue-500 text-white";
-      case "loc":
-      case "gpe":
+      case "location":
         return "bg-gradient-to-r from-teal-300 via-cyan-400 to-blue-400 text-white";
       case "org":
         return "bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 text-white";
-      case "product":
       case "misc":
       default:
         return "bg-gradient-to-r from-pink-300 via-purple-400 to-purple-500 text-white";
     }
   };
+
+  if (!entities || entities.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-2 mt-2">
@@ -40,7 +35,9 @@ const EntityTags: React.FC<EntityTagsProps> = ({ entities }) => {
           className={`px-3 py-1 rounded-full text-xs font-semibold cursor-pointer ${getTypeClass(
             entity.type
           )}`}
-          title={`Type: ${entity.type}${entity.salience ? ` | confidence: ${entity.salience}` : ""}`}
+          title={`Type: ${entity.type}${
+            entity.salience ? ` | confidence: ${entity.salience}` : ""
+          }`}
           whileHover={{
             scale: 1.2,
             rotate: [0, 3, -3, 0],
