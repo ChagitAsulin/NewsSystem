@@ -1,3 +1,4 @@
+// ui/web-mvc/src/app/page.tsx
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -6,18 +7,17 @@ import useSWR from 'swr';
 const API = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8000';
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-// מיפוי נושאים לאייקון וצבע רקע
+// Topic → badge meta
 const TOPIC_META: Record<string, { label: string; emoji: string; bg: string }> = {
   World: { label: 'World', emoji: '🌍', bg: '#e3f2fd' },
-  Politics: { label: 'Politics', emoji: '🏛️', bg: '#fce4ec' },
+  Politics: { label: 'Politics', emoji: '🏛️', bg: '#f3e5f5' },
   Sports: { label: 'Sports', emoji: '🏅', bg: '#e8f5e9' },
-  Tech: { label: 'Tech', emoji: '💻', bg: '#ede7f6' },
+  Tech: { label: 'Tech', emoji: '💻', bg: '#e0f2f1' },
   Business: { label: 'Business', emoji: '💼', bg: '#fff3e0' },
   Other: { label: 'Other', emoji: '📰', bg: '#eeeeee' },
 };
 
-export default function DashboardView() {
-  // כל ה-hooks חייבים להיות תמיד באותו סדר, בלי return לפני
+export default function DashboardPage() {
   const {
     data: news,
     error: newsErr,
@@ -66,215 +66,380 @@ export default function DashboardView() {
     [uniqueNews, topicFilter]
   );
 
-  // רק עכשיו מחזירים לפי מצב
-  if (newsErr || notifsErr) return <div>שגיאה בטעינת נתונים</div>;
-  if (newsLoading || notifsLoading) return <div>טוען…</div>;
+  if (newsErr || notifsErr) return <div>Error loading data.</div>;
+  if (newsLoading || notifsLoading) return <div>Loading…</div>;
 
   return (
     <main
       style={{
-        padding: 24,
-        maxWidth: 1000,
-        margin: '0 auto',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+        minHeight: '100vh',
+        padding: '32px 24px 48px',
+        background: '#f3f4f6',
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", sans-serif',
       }}
     >
-      <h1 style={{ marginBottom: 8 }}>Dashboard 📰</h1>
-      <p style={{ marginBottom: 24, color: '#555' }}>
-        שידור חי של חדשות והתראות מהמערכת שלך.
-      </p>
-
-      {/* סינון לפי נושא */}
-      <section
+      <div
         style={{
-          marginBottom: 24,
-          padding: 12,
-          borderRadius: 8,
-          background: '#f5f5f5',
-          display: 'flex',
-          gap: 12,
-          alignItems: 'center',
+          maxWidth: 1200,
+          margin: '0 auto',
         }}
       >
-        <span>סינון לפי נושא:</span>
-        <select
-          value={topicFilter}
-          onChange={e => setTopicFilter(e.target.value)}
-          style={{ padding: 6, borderRadius: 6 }}
+        {/* Header */}
+        <header
+          style={{
+            marginBottom: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
         >
-          <option value="all">הכול</option>
-          {allTopics.map(t => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-      </section>
-
-      {/* חדשות */}
-      <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>News (enriched_news)</h2>
-
-        {filteredNews.length === 0 ? (
-          <div>אין חדשות מתאימות למסנן.</div>
-        ) : (
-          <div
+          <h1
             style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: 16,
+              margin: 0,
+              fontSize: 28,
+              fontWeight: 700,
+              letterSpacing: 0.3,
+              color: '#111827',
             }}
           >
-            {filteredNews.map((n: any) => {
-              const mainTopic: string =
-                (n.topics_hint && n.topics_hint[0]) || 'Other';
-              const meta = TOPIC_META[mainTopic] ?? TOPIC_META.Other;
+            News Intelligence Dashboard
+          </h1>
+          <p
+            style={{
+              margin: 0,
+              color: '#6b7280',
+              fontSize: 14,
+            }}
+          >
+            Live stream of enriched news and system notifications.
+          </p>
+        </header>
 
-              const contentText = String(n.content ?? '');
-              const snippet =
-                contentText.length > 0
-                  ? contentText.slice(0, 140) +
-                    (contentText.length > 140 ? '…' : '')
-                  : 'No summary available';
+        {/* Filters */}
+        <section
+          style={{
+            marginBottom: 24,
+            padding: 16,
+            borderRadius: 12,
+            background: '#ffffff',
+            boxShadow: '0 1px 3px rgba(15,23,42,0.08)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 12,
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              fontSize: 14,
+              color: '#374151',
+            }}
+          >
+            <span style={{ fontWeight: 500 }}>Filter by topic:</span>
+            <select
+              value={topicFilter}
+              onChange={e => setTopicFilter(e.target.value)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: 999,
+                border: '1px solid #d1d5db',
+                fontSize: 13,
+                background: '#f9fafb',
+                outline: 'none',
+              }}
+            >
+              <option value="all">All topics</option>
+              {allTopics.map(t => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <span
+            style={{
+              fontSize: 12,
+              color: '#9ca3af',
+            }}
+          >
+            Showing {filteredNews.length} articles
+          </span>
+        </section>
 
-              return (
-                <article
-                  key={n.id}
-                  style={{
-                    borderRadius: 10,
-                    padding: 16,
-                    background: '#ffffff',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    border: '1px solid #eee',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <h3
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 2.2fr) minmax(0, 1fr)',
+            gap: 24,
+            alignItems: 'flex-start',
+          }}
+        >
+          {/* News */}
+          <section>
+            <h2
+              style={{
+                margin: '0 0 12px',
+                fontSize: 18,
+                fontWeight: 600,
+                color: '#111827',
+              }}
+            >
+              News stream
+            </h2>
+
+            {filteredNews.length === 0 ? (
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 10,
+                  background: '#ffffff',
+                  border: '1px dashed #d1d5db',
+                  fontSize: 14,
+                  color: '#6b7280',
+                }}
+              >
+                No articles match the current filter.
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                  gap: 16,
+                }}
+              >
+                {filteredNews.map((n: any) => {
+                  const mainTopic: string =
+                    (n.topics_hint && n.topics_hint[0]) || 'Other';
+                  const meta = TOPIC_META[mainTopic] ?? TOPIC_META.Other;
+
+                  const contentText = String(n.content ?? '');
+                  const snippet =
+                    contentText.length > 0
+                      ? contentText.slice(0, 160) +
+                        (contentText.length > 160 ? '…' : '')
+                      : 'No summary available.';
+
+                  return (
+                    <article
+                      key={n.id}
                       style={{
-                        margin: 0,
-                        fontSize: 16,
-                        lineHeight: 1.3,
+                        borderRadius: 12,
+                        padding: 12,
+                        background: '#ffffff',
+                        boxShadow: '0 1px 4px rgba(15,23,42,0.06)',
+                        border: '1px solid #e5e7eb',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8,
                       }}
                     >
-                      {n.title}
-                    </h3>
+                      {/* Cloudinary image */}
+                      {n.image_url && (
+                        <div
+                          style={{
+                            overflow: 'hidden',
+                            borderRadius: 10,
+                            maxHeight: 160,
+                          }}
+                        >
+                          <img
+                            src={n.image_url}
+                            alt={n.title}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                        </div>
+                      )}
 
-                    <span
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                        fontSize: 12,
-                        background: meta.bg,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {meta.emoji} {meta.label}
-                    </span>
-                  </div>
-
-                  <p
-                    style={{
-                      margin: '4px 0 8px',
-                      fontSize: 14,
-                      color: '#444',
-                    }}
-                  >
-                    {snippet}
-                  </p>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: 12,
-                      color: '#777',
-                    }}
-                  >
-                    <span>
-                      {n.published_at
-                        ? new Date(n.published_at).toLocaleString()
-                        : ''}
-                    </span>
-
-                    {n.url && (
-                      <a
-                        href={n.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ textDecoration: 'underline' }}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                          alignItems: 'flex-start',
+                        }}
                       >
-                        לקריאה מלאה
-                      </a>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                        <h3
+                          style={{
+                            margin: 0,
+                            fontSize: 15,
+                            lineHeight: 1.35,
+                            color: '#111827',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {n.title}
+                        </h3>
 
-      {/* התראות */}
-      <section>
-        <h2 style={{ marginBottom: 12 }}>Notifications</h2>
-        {uniqueNotifs.length === 0 ? (
-          <div>אין התראות כרגע.</div>
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: 12,
-            }}
-          >
-            {uniqueNotifs.map((n: any) => {
-              const mainTopic: string =
-                (n.topics_hint && n.topics_hint[0]) || 'Other';
-              const meta = TOPIC_META[mainTopic] ?? TOPIC_META.Other;
+                        <span
+                          style={{
+                            padding: '3px 10px',
+                            borderRadius: 999,
+                            fontSize: 11,
+                            background: meta.bg,
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {meta.emoji} {meta.label}
+                        </span>
+                      </div>
 
-              return (
-                <article
-                  key={n.id}
-                  style={{
-                    borderRadius: 10,
-                    padding: 12,
-                    background: '#fafafa',
-                    border: '1px solid #e0e0e0',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                    }}
-                  >
-                    <span>{n.title}</span>
-                    <span
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: 13,
+                          color: '#4b5563',
+                        }}
+                      >
+                        {snippet}
+                      </p>
+
+                      <div
+                        style={{
+                          marginTop: 4,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: 11,
+                          color: '#9ca3af',
+                        }}
+                      >
+                        <span>
+                          {n.published_at
+                            ? new Date(n.published_at).toLocaleString()
+                            : ''}
+                        </span>
+
+                        {n.url && (
+                          <a
+                            href={n.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              textDecoration: 'none',
+                              fontWeight: 500,
+                              color: '#2563eb',
+                            }}
+                          >
+                            Open full article →
+                          </a>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Notifications */}
+          <section>
+            <h2
+              style={{
+                margin: '0 0 12px',
+                fontSize: 18,
+                fontWeight: 600,
+                color: '#111827',
+              }}
+            >
+              Notifications
+            </h2>
+            {uniqueNotifs.length === 0 ? (
+              <div
+                style={{
+                  padding: 16,
+                  borderRadius: 10,
+                  background: '#ffffff',
+                  border: '1px dashed #d1d5db',
+                  fontSize: 14,
+                  color: '#6b7280',
+                }}
+              >
+                No notifications at the moment.
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}
+              >
+                {uniqueNotifs.map((n: any) => {
+                  const mainTopic: string =
+                    (n.topics_hint && n.topics_hint[0]) || 'Other';
+                  const meta = TOPIC_META[mainTopic] ?? TOPIC_META.Other;
+
+                  return (
+                    <article
+                      key={n.id}
                       style={{
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                        fontSize: 12,
-                        background: meta.bg,
-                        whiteSpace: 'nowrap',
+                        borderRadius: 10,
+                        padding: 10,
+                        background: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
                       }}
                     >
-                      {meta.emoji} {meta.label}
-                    </span>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 13,
+                            color: '#111827',
+                          }}
+                        >
+                          {n.title}
+                        </span>
+                        <span
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            fontSize: 11,
+                            background: meta.bg,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {meta.emoji} {meta.label}
+                        </span>
+                      </div>
+                      {n.created_at && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: '#9ca3af',
+                          }}
+                        >
+                          {new Date(n.created_at).toLocaleString()}
+                        </span>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
     </main>
   );
 }

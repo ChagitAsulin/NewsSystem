@@ -1,81 +1,54 @@
-/*
-import type { NewsItemDTO } from "@/models/dto/NewsItemDTO";
-import type { NewsItem } from "@/models/domain/NewsItem";
+// ui/web-mvc/src/adapters/newsMapper.ts
+import type { NewsItem } from "../models/domain/NewsItem";
+import type { NewsItemDTO } from "../models/dto/NewsItemDTO";
 
-export const mapNewsItem = (dto: NewsItemDTO): NewsItem => ({
-  id: dto.id,
-  title: dto.title,
-  summary: dto.summary,
-  imageUrl: undefined, // אפשר לחבר ל-mediaClient כשיהיה image_public_id
-  topics: (dto as any).topics ?? [],
-  classification: (dto as any).classification ?? "",
-  tags: (dto as any).tags ?? [],
-  entities: (dto as any).entities ?? [],
-  createdAt: new Date((dto as any).created_at ?? Date.now()),
-});
+/**
+ * הפונקציה שאחראית להפוך את השדות הגולמיים משכבת ה-API
+ * ל-imageUrl שה-UI משתמש בו.
+ */
+function resolveImageUrl(dto: NewsItemDTO): string | undefined {
+  // קודם כול נשתמש ב-URL המלא שמגיע מה-backend:
+  if (dto.image_url && dto.image_url.trim().length > 0) {
+    return dto.image_url;
+  }
 
-*/
+  // אם בעתיד תרצי, אפשר לבנות URL גם מ-image_public_id
+  // if (dto.image_public_id) {
+  //   return mediaClient.buildUrl(dto.image_public_id);
+  // }
 
-/*
-מטרה:
-המרת תגובות גולמיות של API/DB לאובייקטי NewsItem.
-מבטיחה שממשק המשתמש מקבל תמיד מבנה נקי ועקבי.
-ייחודי משום שרק שכבת ההתאמה יודעת כיצד לנרמל נתוני backend גולמיים.
-*/
+  return undefined;
+}
 
-import { NewsItem } from "../models/domain/NewsItem";
-import { NewsItemDTO } from "../models/dto/NewsItemDTO";
-
-/// <summary>
-/// Maps raw news data from API or backend into NewsItem objects
-/// ready for frontend consumption. Ensures strict type compliance:
-/// - id: unique identifier of the news
-/// - title: news title
-/// - summary: brief summary
-/// - imageUrl: optional image URL
-/// - createdAt: Date object (used in frontend formatting)
-/// - topics: array of topic codes
-/// - classification: optional classification label
-/// - tags: optional tags for search/filtering
-/// - entities: extracted entities (person, org, location, misc)
-/// </summary>
-export function mapNewsItem(raw: any): NewsItem {
-  if (!raw) throw new Error("Cannot map undefined or null news item");
+/**
+ * Map single DTO → domain model.
+ */
+export function mapNewsItem(dto: NewsItemDTO): NewsItem {
+  if (!dto) {
+    throw new Error("Cannot map undefined or null NewsItemDTO");
+  }
 
   return {
-    id: raw.id || raw._id || "",
-    title: raw.title || "",
-    summary: raw.summary || "",
-    imageUrl: raw.imageUrl || raw.image_url || "",
-    createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
-    topics: raw.topics || [],
-    classification: raw.classification || "",
-    tags: raw.tags || [],
-    entities: raw.entities || [],
+    id: dto.id,
+    title: dto.title,
+    summary: dto.summary,
+    imageUrl: resolveImageUrl(dto),   // <<< פה זה מתחבר לדומיין
+    topics: dto.topics ?? [],
+    classification: dto.classification ?? "",
+    tags: dto.tags ?? [],
+    entities:
+      dto.entities?.map((e) => ({
+        type: e.type as any,
+        value: e.value,
+        salience: e.salience,
+      })) ?? [],
+    createdAt: dto.created_at ? new Date(dto.created_at) : new Date(),
   };
 }
 
-/// <summary>
-/// Maps an array of raw news items into NewsItem objects
-/// </summary>
-/// <param name="rawArray">Array of raw news items</param>
-/// <returns>Array of NewsItem</returns>
-export function mapNewsArray(rawArray: any[]): NewsItem[] {
-  return rawArray.map(mapNewsItem);
-}
-
-/// <summary>
-/// Optional helper function to format createdAt to readable string for frontend UI
-/// with elegant date representation suitable for animations and hover effects.
-/// Example usage: formatNewsDate(newsItem)
-/// </summary>
-export function formatNewsDate(newsItem: NewsItem): string {
-  return newsItem.createdAt.toLocaleString("he-IL", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+/**
+ * Map array of DTOs → domain models.
+ */
+export function mapNewsArray(dtos: NewsItemDTO[]): NewsItem[] {
+  return dtos.map(mapNewsItem);
 }
