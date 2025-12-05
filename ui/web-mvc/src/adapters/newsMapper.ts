@@ -1,57 +1,54 @@
-/*
-import type { NewsItemDTO } from "@/models/dto/NewsItemDTO";
-import type { NewsItem } from "@/models/domain/NewsItem";
+// ui/web-mvc/src/adapters/newsMapper.ts
+import type { NewsItem } from "../models/domain/NewsItem";
+import type { NewsItemDTO } from "../models/dto/NewsItemDTO";
 
-export const mapNewsItem = (dto: NewsItemDTO): NewsItem => ({
-  id: dto.id,
-  title: dto.title,
-  summary: dto.summary,
-  imageUrl: undefined, // אפשר לחבר ל-mediaClient כשיהיה image_public_id
-  topics: (dto as any).topics ?? [],
-  classification: (dto as any).classification ?? "",
-  tags: (dto as any).tags ?? [],
-  entities: (dto as any).entities ?? [],
-  createdAt: new Date((dto as any).created_at ?? Date.now()),
-});
+/**
+ * הפונקציה שאחראית להפוך את השדות הגולמיים משכבת ה-API
+ * ל-imageUrl שה-UI משתמש בו.
+ */
+function resolveImageUrl(dto: NewsItemDTO): string | undefined {
+  // קודם כול נשתמש ב-URL המלא שמגיע מה-backend:
+  if (dto.image_url && dto.image_url.trim().length > 0) {
+    return dto.image_url;
+  }
 
-*/
+  // אם בעתיד תרצי, אפשר לבנות URL גם מ-image_public_id
+  // if (dto.image_public_id) {
+  //   return mediaClient.buildUrl(dto.image_public_id);
+  // }
 
-/*
-מטרה:
-המרת תגובות גולמיות של API/DB לאובייקטי NewsItem.
-מבטיחה שממשק המשתמש מקבל תמיד מבנה נקי ועקבי.
-ייחודי משום שרק שכבת ההתאמה יודעת כיצד לנרמל נתוני backend גולמיים.
-*/
+  return undefined;
+}
 
-import { NewsItem } from "../models/domain/NewsItem";
-import { Entity } from "../models/domain/Entity"; // ✅ תוקן
-import { NewsItemDTO } from "../models/dto/NewsItemDTO";
-
-export function mapNewsItem(raw: any): NewsItem {
-  if (!raw) throw new Error("Cannot map undefined or null news item");
-
-  const entities: Entity[] = (raw.entities ?? []).map((e: any) => ({
-    value: e.value || e.name || "",
-    type: e.type || "misc",
-    confidence: e.salience ?? e.confidence,
-  }));
+/**
+ * Map single DTO → domain model.
+ */
+export function mapNewsItem(dto: NewsItemDTO): NewsItem {
+  if (!dto) {
+    throw new Error("Cannot map undefined or null NewsItemDTO");
+  }
 
   return {
-    id: raw.id || raw._id || "",
-    title: raw.title || "",
-    content: raw.content || "",
-    summary: raw.summary || "",
-    imageUrl: raw.imageUrl || raw.image_url || (raw.image_public_id ? `/media/${raw.image_public_id}` : undefined),
-    createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
-    publishedAt: raw.publishedAt ? new Date(raw.publishedAt) : new Date(),
-    topics: raw.topics || [],
-    classification: raw.classification || "",
-    tags: raw.tags || [],
-    entities,
-    source: raw.source || "",
+    id: dto.id,
+    title: dto.title,
+    summary: dto.summary,
+    imageUrl: resolveImageUrl(dto),   // <<< פה זה מתחבר לדומיין
+    topics: dto.topics ?? [],
+    classification: dto.classification ?? "",
+    tags: dto.tags ?? [],
+    entities:
+      dto.entities?.map((e) => ({
+        type: e.type as any,
+        value: e.value,
+        salience: e.salience,
+      })) ?? [],
+    createdAt: dto.created_at ? new Date(dto.created_at) : new Date(),
   };
 }
 
-export function mapNewsArray(rawArray: any[]): NewsItem[] {
-  return rawArray.map(mapNewsItem);
+/**
+ * Map array of DTOs → domain models.
+ */
+export function mapNewsArray(dtos: NewsItemDTO[]): NewsItem[] {
+  return dtos.map(mapNewsItem);
 }
