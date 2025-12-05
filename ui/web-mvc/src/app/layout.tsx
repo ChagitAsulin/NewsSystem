@@ -5,6 +5,7 @@ import React from "react";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 /**
  * צבעי הפרויקט
@@ -17,26 +18,33 @@ const colors = {
 };
 
 /**
- * Header Component
- * מופיע בכל דף ומכיל לוגו וניווט
+ * Header Component עם אנימציות Framer Motion
  */
 const Header: React.FC = () => (
   <header className="bg-white shadow-md sticky top-0 z-50">
     <div className="container mx-auto flex items-center justify-between px-4 py-3">
-      {/* לוגו */}
+      {/* לוגו עם אנימציה */}
       <Link href="/">
-        <div className="flex items-center cursor-pointer">
+        <motion.div
+          className="flex items-center cursor-pointer"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
           <Image
-            src="/logo.png"         // בתיקיית public
+            src="/logo.png" // בתיקיית public
             alt="NewsSystem Logo"
             width={48}
             height={48}
             className="rounded-full"
           />
-          <span className={`ml-3 font-bold text-xl ${colors.primary}`}>
+          <motion.span
+            className={`ml-3 font-bold text-xl ${colors.primary}`}
+            whileHover={{ rotate: 5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
             NewsSystem
-          </span>
-        </div>
+          </motion.span>
+        </motion.div>
       </Link>
 
       {/* ניווט */}
@@ -52,14 +60,22 @@ const Header: React.FC = () => (
         </Link>
       </nav>
 
-      {/* כפתורי פעולה */}
+      {/* כפתורי פעולה עם אנימציה */}
       <div className="flex items-center space-x-4">
-        <button className="px-4 py-2 bg-teal-400 text-white rounded-lg shadow hover:bg-teal-500 transition-colors">
+        <motion.button
+          className="px-4 py-2 bg-teal-400 text-white rounded-lg shadow"
+          whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.2)" }}
+          whileTap={{ scale: 0.95 }}
+        >
           התחבר
-        </button>
-        <button className="px-4 py-2 bg-orange-400 text-white rounded-lg shadow hover:bg-orange-500 transition-colors">
+        </motion.button>
+        <motion.button
+          className="px-4 py-2 bg-orange-400 text-white rounded-lg shadow"
+          whileHover={{ scale: 1.05, boxShadow: "0px 10px 20px rgba(0,0,0,0.2)" }}
+          whileTap={{ scale: 0.95 }}
+        >
           הרשמה
-        </button>
+        </motion.button>
       </div>
     </div>
   </header>
@@ -67,7 +83,7 @@ const Header: React.FC = () => (
 
 /**
  * RootLayout Component
- * כולל Head, favicon, לוגו ו-HDR
+ * כולל Head עם favicon ולוגו, Header עם אנימציות
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -84,4 +100,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-
